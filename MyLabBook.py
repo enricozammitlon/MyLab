@@ -30,6 +30,13 @@ class Workspace:
         self.IDlabel.image = icon
         self.IDlabel.grid(row=0,column=0,sticky='NSEW',padx=5, pady=5)
     
+    def saveExp(self,title):
+        # open a file to write to
+        writeFile = open('%s.mlb'%(title),'a');
+        print("I am doing it!")
+        writeFile.write("\n%s~\n,%s~\n"%(self.methodText.get("1.0",tk.END),self.notesText.get("1.0",tk.END)));
+        writeFile.close
+    
     def __init__(self,master):
         self.s = ttk.Style()
         self.s.configure('TLabel', foreground='Black', background='white')
@@ -126,7 +133,6 @@ class Workspace:
         a = f.add_subplot(111)
         a.plot([1,2,3,4,5,6,7,8],[5,6,1,3,8,9,3,5])
         self.dataPlot = tkagg.FigureCanvasTkAgg(f,master=self.frame5)
-
         # -----------------------------------------------------------------------
 
         # Frame 5 widgets positions  --------------------------------------------
@@ -155,6 +161,8 @@ class MainMenu:
     # Select file to open -------------------------------------------------------
     def saveExperiment(self):
         # open a file to write to
+        global expTitle
+        expTitle=self.expTitleEntry.get()
         writeFile = open('%s.mlb'%(self.expTitleEntry.get()),'w');
         writeFile.write("%s,%s,%s"%(self.expTitleEntry.get(),self.labDaysLengthEntry.get(),self.collaboratorsEntry.get()));
         writeFile.close
@@ -171,9 +179,20 @@ class MainMenu:
 
     # Close the application -----------------------------------------------------
     def switchToWorkspace(self):
+        self.destroy()
         workspace=tk.Tk()
         secondaryApp=Workspace(workspace)
         secondaryApp.master.configure(background='white')
+        menubar = tk.Menu(workspace)
+        
+        filemenu = tk.Menu(menubar,tearoff=0)
+        
+        # add commands to menu
+        filemenu.add_command(label="New File")
+        filemenu.add_command(label="Open")
+        filemenu.add_command(label="Save",command=lambda: secondaryApp.saveExp(expTitle))
+        menubar.add_cascade(label="File", menu=filemenu)
+        workspace.config(menu=menubar)  
         workspace.mainloop()
 
 
@@ -301,6 +320,7 @@ for i in range(len(figures)):
 """
 app=MainMenu(mainM)
 app.master.configure(background='white')
+
 
 mainM.mainloop()
 
