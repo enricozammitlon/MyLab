@@ -10,7 +10,7 @@ import pandas as pd
 
 # Workspace  ---------------------------------------------------------------------
 class Workspace:
-    
+
     # Select file to open -------------------------------------------------------
     def newImage(self):
         self.filename=''
@@ -23,21 +23,23 @@ class Workspace:
             self.filename = file.name
         else:
             errorValueRead = 1
-            
+
 
         icon = Image.open(self.filename)
         self.IDlabel = ttk.Label(self.imageFrame,image=icon)
         self.IDlabel.image = icon
         self.IDlabel.grid(row=0,column=0,sticky='NSEW',padx=5, pady=5)
-    
-    def saveExp(self,title):
+
+    def saveExp(self):
         # open a file to write to
-        writeFile = open('%s.mlb'%(title),'a');
-        print("I am doing it!")
-        writeFile.write("\n%s~\n,%s~\n"%(self.methodText.get("1.0",tk.END),self.notesText.get("1.0",tk.END)));
+        firstline=expTitle+","+labDaysLength+","+collaborators
+        print("first line: %s"%firstline)
+        writeFile = open('%s.mlb'%(expTitle),'w');
+        writeFile.write("%s\n***\n%s\n***\n%s"%(firstline,self.methodText.get("1.0",tk.END),self.notesText.get("1.0",tk.END)));
         writeFile.close
-    
-    def __init__(self,master):
+        print("Save Successful!")
+
+    def __init__(self,master,expTitle,labDaysLength,collaborators,methodtext,notestext):
         self.s = ttk.Style()
         self.s.configure('TLabel', foreground='Black', background='white')
         self.s.configure('TButton', foreground='black', background='white')
@@ -46,14 +48,14 @@ class Workspace:
         self.s.configure('TMenubutton', background='white', foreground='black', width=25)
         self.s.configure('TLabelframe', foreground='black', background='white')
         self.s.configure('TFrame', background='white')
-        
+
         # Window properties -----------------------------------------------------
         self.master = master
         master.wm_title("MyLabBook")
         master.geometry("{0}x{1}+0+0".format(master.winfo_screenwidth(), master.winfo_screenheight()))
         # -----------------------------------------------------------------------
         # Frames ----------------------------------------------------------------
-        
+
         self.frame1 = tk.LabelFrame(master, text="Setup", background='white')
         self.imageFrame=tk.Frame(self.frame1,background='white')
         self.frame2 = tk.LabelFrame(master, text="Plan & Method", background='white')
@@ -68,7 +70,7 @@ class Workspace:
         self.imageFrame.grid(row=0, column=0, sticky='NSEW',padx=5, pady=5)
 
         self.frame2.grid(row=1,column=0,sticky='NW',padx=5, pady=5)
-        
+
         self.frame3.grid(row=0, column=1, sticky='NW',padx=5, pady=5)
         self.frame4.grid(row=1, column=1, sticky='NW',padx=5, pady=5)
         self.frame5.grid(row=0, column=2,sticky='NW',padx=5, pady=5)
@@ -83,23 +85,25 @@ class Workspace:
         # -----------------------------------------------------------------------
         # Frame 2 widgets  ------------------------------------------------------
         self.methodText = tk.Text(self.frame2, borderwidth=3, relief="sunken",width=40,height=15)
+        self.methodText.insert(tk.END, methodtext)
         self.methodText.config(font=("arial", 12), undo=True, wrap='word')
         self.scrollbarMethod = tk.Scrollbar(self.frame2, command=self.methodText.yview)
         self.methodText['yscrollcommand'] = self.scrollbarMethod.set
-        
+
         # -----------------------------------------------------------------------
 
         # Frame 2 widgets positions  --------------------------------------------
         self.methodText.grid(row=0, column=0, sticky="nsew", padx=2, pady=2)
         self.scrollbarMethod.grid(row=0, column=1, sticky='nsew')
-        
+
         # -----------------------------------------------------------------------
         # Frame 3 widgets  ------------------------------------------------------
         self.notesText = tk.Text(self.frame3, borderwidth=3, relief="sunken",width=40,height=23)
         self.notesText.config(font=("arial", 12), undo=True, wrap='word')
+        self.notesText.insert(tk.END, notestext)
         self.scrollbarNotes = tk.Scrollbar(self.frame3, command=self.notesText.yview)
         self.notesText['yscrollcommand'] = self.scrollbarNotes.set
-        
+
         # -----------------------------------------------------------------------
 
         # Frame 3 widgets positions  --------------------------------------------
@@ -120,13 +124,13 @@ class Workspace:
             for j in range(width): #Columns
                 b = tk.Entry(self.frame4, text="hi",width=int(40/width))
                 b.grid(row=i, column=j,sticky='nsew')
-        
+
         # -----------------------------------------------------------------------
 
         # Frame 4 widgets positions  --------------------------------------------
         #self.dataText.grid(row=0, column=0, sticky="nsew", padx=2, pady=2)
         #self.scrollbarData.grid(row=0, column=1, sticky='nsew')
-        
+
         # -----------------------------------------------------------------------
         # Frame 5 widgets  ------------------------------------------------------
         f = plt.Figure(figsize=(5,4))
@@ -151,11 +155,12 @@ class MainMenu:
 
         if file != None:
             filename = file.name
-            return filename
+            self.previousExperimentDirEntry.configure(state='normal')
+            self.previousExperimentDirEntry.insert(0,filename)
         else:
+            print("Error Occured")
             errorValueRead = 1
-        self.previousExperimentDirEntry.configure(state='normal')
-        self.previousExperimentDirEntry.insert(0,filename)
+
 
 
     # Select file to open -------------------------------------------------------
@@ -163,15 +168,18 @@ class MainMenu:
         # open a file to write to
         global expTitle
         expTitle=self.expTitleEntry.get()
-        writeFile = open('%s.mlb'%(self.expTitleEntry.get()),'w');
-        writeFile.write("%s,%s,%s"%(self.expTitleEntry.get(),self.labDaysLengthEntry.get(),self.collaboratorsEntry.get()));
+        writeFile = open('%s.mlb'%(expTitle),'w');
+        writeFile.write("%s,%s,%s"%(expTitle,self.labDaysLengthEntry.get(),self.collaboratorsEntry.get()));
         writeFile.close
-    
+        global sourceflag
+        sourceflag=False
+        self.switchToWorkspace()
+
     def resetMainMenu(self):
         self.expTitleEntry.delete(0,len(self.expTitleEntry.get()))
         self.labDaysLengthEntry.delete(0,len(self.labDaysLengthEntry.get()))
         self.collaboratorsEntry.delete(0,len(self.collaboratorsEntry.get()))
-        
+
     # Close the application -----------------------------------------------------
     def destroy(self):
         self.master.quit()
@@ -179,28 +187,62 @@ class MainMenu:
 
     # Close the application -----------------------------------------------------
     def switchToWorkspace(self):
+        global sourceflag
+        global expTitle
+        global labDaysLength
+        global collaborators
+        global methodtext
+        global filename
+        global notestext
+        expTitle=self.expTitleEntry.get()
+        methodtext=""
+        notestext=""
+        labDaysLength=self.labDaysLengthEntry.get()
+        collaborators=self.collaboratorsEntry.get()
+        if(sourceflag):
+            readFile = open('%s'%(filename));
+            counter=0
+            # read in the file line by line
+            for line in readFile:
+                print(line)
+                if(counter==0):
+                    splitUp = line.split(',');
+                    expTitle=splitUp[0];
+                    labDaysLength=splitUp[1]
+                    collaborators=splitUp[2]
+                    counter+=1
+                if(counter==2):
+                    if(line!="***\n"):                        
+                        methodtext+=line;
+                if(counter==3):
+                    notestext+=line;
+                if(line=="***\n"):
+                    counter+=1
         self.destroy()
         workspace=tk.Tk()
-        secondaryApp=Workspace(workspace)
+        secondaryApp=Workspace(workspace,expTitle,labDaysLength,collaborators,methodtext,notestext)
         secondaryApp.master.configure(background='white')
         menubar = tk.Menu(workspace)
-        
+
         filemenu = tk.Menu(menubar,tearoff=0)
-        
+
         # add commands to menu
         filemenu.add_command(label="New File")
         filemenu.add_command(label="Open")
-        filemenu.add_command(label="Save",command=lambda: secondaryApp.saveExp(expTitle))
+        filemenu.add_command(label="Save",command=lambda: secondaryApp.saveExp())
         menubar.add_cascade(label="File", menu=filemenu)
-        workspace.config(menu=menubar)  
+        workspace.config(menu=menubar)
         workspace.mainloop()
 
 
 
     def __init__(self,master):
-
+        global sourceflag
+        global filename
+        filename=""
+        sourceflag=True
         # Graphical User Interface ----------------------------------------------
-        
+
         # Graphical User Interface ----------------------------------------------
 
         self.s = ttk.Style()
@@ -220,13 +262,13 @@ class MainMenu:
         # Frames ----------------------------------------------------------------
 
         #self.frame0 = tk.Frame(master,bg='white')
-        
+
         self.frame1 = tk.LabelFrame(master, text="New Experiment", background='white')
         self.buttonFrame1= tk.Frame(self.frame1, background='white')
-        
+
         self.frame2 = tk.LabelFrame(master, text="Load Experiment", background='white')
-        
-        # Frame grid positions ---------------------------------        
+
+        # Frame grid positions ---------------------------------
 
         #self.frame0.grid(row=0, columnspan=3, sticky='N')
 
@@ -236,7 +278,7 @@ class MainMenu:
 
         self.frame2.grid(row=1,columnspan=2,  sticky='EW',
                          padx=5, pady=5,ipadx=5,ipady=5)
-        
+
         # -----------------------------------------------------------------------
 
         # Frame 0 widgets  ------------------------------------------------------
@@ -249,7 +291,7 @@ class MainMenu:
         self.expTitleLabel = ttk.Label(self.frame1, text="Name : ")
         self.labDaysLengthLabel = ttk.Label(self.frame1, text="Length(Days) : ")
         self.collaboratorsLabel = ttk.Label(self.frame1, text="Collaborators : ")
-        
+
         self.expTitleEntry = ttk.Entry(self.frame1)
         self.labDaysLengthEntry = ttk.Entry(self.frame1)
         self.collaboratorsEntry = ttk.Entry(self.frame1)
@@ -277,7 +319,7 @@ class MainMenu:
         self.exit = ttk.Button(self.buttonFrame1, text=" Exit ", command=self.destroy,width=4)
         self.reset = ttk.Button(self.buttonFrame1, text=" Reset ",command=self.resetMainMenu,width=4)
         self.save = ttk.Button(self.buttonFrame1, text=" Save ",command=self.saveExperiment,width=4)
-        
+
         #ButtonFrame1 widgets positions  --------------------------------------------
 
         self.exit.grid(row=0, column=0, sticky='EW',
@@ -291,18 +333,18 @@ class MainMenu:
         # -----------------------------------------------------------------------
 
         #Frame2 widgets  ------------------------------------------------------
-        
+
         self.previousExperimentDirLabel= ttk.Label(self.frame2, text="Directory of Experiment: ")
         self.previousExperimentDirEntry= ttk.Entry(self.frame2,state='disabled')
         self.opendir = ttk.Button(self.frame2, text="Open",command=self.openfile,width=4)
         self.sendToWorkspace=ttk.Button(self.frame2, text="To Workspace...",command=self.switchToWorkspace,width=12)
-        
+
         #Frame2 widgets positions  --------------------------------------------
         self.previousExperimentDirLabel.grid(row=0, column=0, sticky='E')
         self.previousExperimentDirEntry.grid(row=0, column=1, sticky='W')
         self.opendir.grid(row=0, column=2, sticky='EW',padx=7)
         self.sendToWorkspace.grid(row=0, column=3, sticky='EW',padx=7)
-        
+
 
 mainM = tk.Tk()
 """
@@ -323,9 +365,3 @@ app.master.configure(background='white')
 
 
 mainM.mainloop()
-
-
-
-
-
-        

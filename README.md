@@ -4,6 +4,6 @@
 TO BE DONE:
 -Fix Image adding function
 -Add insertion of data with a button for real time graphing
--Join with Toby's backend for error analysis
--Add saving function
+-Join with Toby's backend for error analysis(Maybe)
+-Add saving function:Done
 -Add recall function
